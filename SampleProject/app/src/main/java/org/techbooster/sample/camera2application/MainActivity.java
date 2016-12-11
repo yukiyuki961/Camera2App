@@ -16,6 +16,7 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.ImageReader;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -23,6 +24,8 @@ import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
+
+import com.valkyrie.nabeshimamac.camera2.R;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -137,10 +140,12 @@ public class MainActivity extends Activity implements CameraInterface {
     }
 
     private void openCamera(int width, int height) {
-        if (checkSelfPermission(Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            requestCameraPermission();
-            return;
+        if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+            if (checkSelfPermission(Manifest.permission.CAMERA)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestCameraPermission();
+                return;
+            }
         }
 
         String cameraId = setUpCameraOutputs(width, height);
@@ -251,32 +256,36 @@ public class MainActivity extends Activity implements CameraInterface {
     // パーミッションの処理シーケンスはまだおかしい
     // Parmission handling for Android 6.0
     private void requestCameraPermission() {
-        if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
-            // 権限チェックした結果、持っていない場合はダイアログを出す
-            new AlertDialog.Builder(this)
-                    .setMessage("Request Permission")
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            requestPermissions(new String[]{Manifest.permission.CAMERA},
-                                    REQUEST_CODE_CAMERA_PERMISSION);
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel,
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    finish();
+        if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+                // 権限チェックした結果、持っていない場合はダイアログを出す
+                new AlertDialog.Builder(this)
+                        .setMessage("Request Permission")
+                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                    requestPermissions(new String[]{Manifest.permission.CAMERA},
+                                            REQUEST_CODE_CAMERA_PERMISSION);
                                 }
-                            })
-                    .create();
-            return;
-        }
+                            }
+                        })
+                        .setNegativeButton(android.R.string.cancel,
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        finish();
+                                    }
+                                })
+                        .create();
+                return;
+            }
 
-        // 権限を取得する
-        requestPermissions(new String[]{Manifest.permission.CAMERA},
-                REQUEST_CODE_CAMERA_PERMISSION);
-        return;
+            // 権限を取得する
+            requestPermissions(new String[]{Manifest.permission.CAMERA},
+                    REQUEST_CODE_CAMERA_PERMISSION);
+
+        }
     }
 
     @Override
